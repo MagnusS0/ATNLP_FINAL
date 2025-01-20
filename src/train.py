@@ -3,14 +3,14 @@ import torch.nn as nn
 import torch.nn.utils as nn_utils
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from dataset import SCANDataset
-from model.transformer import Transformer
+from .data.dataset import SCANDataset
+from .model.transformer import Transformer
 from tqdm import tqdm
 import random
 from rich import print
 from rich.traceback import install
 import numpy as np
-from utils.utils import greedy_decode, oracle_greedy_search, calculate_accuracy
+from .utils.utils import greedy_decode, oracle_greedy_search, calculate_accuracy
 from typing import Tuple, Callable
 from torch.utils.tensorboard import SummaryWriter
 
@@ -328,6 +328,7 @@ def main(
         oracle: Whether to use oracle greedy search during evaluation. Defaults to False.
         train_fn: Training function to use. Defaults to train_epoch_teacher_forcing.
     """
+
     def set_seed(random_seed):
         random.seed(random_seed)
         torch.manual_seed(random_seed)
@@ -348,15 +349,22 @@ def main(
     dataset = SCANDataset(train_path)
     test_dataset = SCANDataset(test_path)
     train_loader = DataLoader(
-        dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0, pin_memory=True,
+        dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=0,
+        pin_memory=True,
     )
     test_loader = DataLoader(
-        test_dataset, batch_size=BATCH_SIZE, num_workers=0, pin_memory=True,
+        test_dataset,
+        batch_size=BATCH_SIZE,
+        num_workers=0,
+        pin_memory=True,
     )
 
     # Get special tokens for source and target vocabularies
     src_pad_idx = dataset.src_vocab.tok2id["<PAD>"]
-    
+
     tgt_pad_idx = dataset.tgt_vocab.tok2id["<PAD>"]
     tgt_eos_idx = dataset.tgt_vocab.tok2id["<EOS>"]
     tgt_bos_idx = dataset.tgt_vocab.tok2id["<BOS>"]
@@ -467,4 +475,9 @@ def main(
         plot_data["greedy_accuracies"].append(final_token_acc.item())
         plot_data["greedy_seq_accuracies"].append(final_seq_acc.item())
 
-    return model, best_accuracy, final_token_acc if not oracle else None, plot_data if not oracle else None
+    return (
+        model,
+        best_accuracy,
+        final_token_acc if not oracle else None,
+        plot_data if not oracle else None,
+    )

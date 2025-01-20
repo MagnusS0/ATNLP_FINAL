@@ -1,5 +1,5 @@
-from train import main
-from dataset import SCANDataset
+from ..train import main
+from ..data.dataset import SCANDataset
 import torch
 import numpy as np
 from rich import print
@@ -21,12 +21,17 @@ def get_dataset_pairs():
     return pairs
 
 
-def plot_experiment_results(sizes, mean_tf_accuracies, std_tf_accuracies, 
-                          mean_greedy_accuracies, std_greedy_accuracies, 
-                          save_path="experiments/exp1_results.png"):
+def plot_experiment_results(
+    sizes,
+    mean_tf_accuracies,
+    std_tf_accuracies,
+    mean_greedy_accuracies,
+    std_greedy_accuracies,
+    save_path="experiments/exp1_results.png",
+):
     """
     Create bar plots for experiment one showing accuracies for different dataset sizes.
-    
+
     Args:
         sizes: List of dataset sizes
         mean_tf_accuracies: Mean teacher forcing accuracies
@@ -36,32 +41,42 @@ def plot_experiment_results(sizes, mean_tf_accuracies, std_tf_accuracies,
         save_path: Path to save the plot
     """
     plt.figure(figsize=(12, 6))
-    
+
     x = np.arange(len(sizes))
     width = 0.35
-    
+
     # Create bars with error bars
-    plt.bar(x - width/2, mean_tf_accuracies, width, 
-            yerr=std_tf_accuracies, label='Teacher Forcing',
-            capsize=5)
-    plt.bar(x + width/2, mean_greedy_accuracies, width,
-            yerr=std_greedy_accuracies, label='Greedy Search',
-            capsize=5)
-    
-    plt.xlabel('Dataset Size')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy Comparison: Teacher Forcing vs Greedy Search')
-    plt.xticks(x, [f'p{s}' for s in sizes])
+    plt.bar(
+        x - width / 2,
+        mean_tf_accuracies,
+        width,
+        yerr=std_tf_accuracies,
+        label="Teacher Forcing",
+        capsize=5,
+    )
+    plt.bar(
+        x + width / 2,
+        mean_greedy_accuracies,
+        width,
+        yerr=std_greedy_accuracies,
+        label="Greedy Search",
+        capsize=5,
+    )
+
+    plt.xlabel("Dataset Size")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy Comparison: Teacher Forcing vs Greedy Search")
+    plt.xticks(x, [f"p{s}" for s in sizes])
     plt.legend()
-    
+
     # Add value labels on top of each bar
     # for i, (v, std) in enumerate(zip(mean_tf_accuracies, std_tf_accuracies)):
-    #     plt.text(i - width/2, v + std, f'{v:.3f}±{std:.3f}', 
+    #     plt.text(i - width/2, v + std, f'{v:.3f}±{std:.3f}',
     #             ha='center', va='bottom')
     # for i, (v, std) in enumerate(zip(mean_greedy_accuracies, std_greedy_accuracies)):
-    #     plt.text(i + width/2, v + std, f'{v:.3f}±{std:.3f}', 
+    #     plt.text(i + width/2, v + std, f'{v:.3f}±{std:.3f}',
     #             ha='center', va='bottom')
-    
+
     plt.tight_layout()
     plt.savefig(save_path)
     plt.close()
@@ -96,7 +111,11 @@ def run_all_variations(n_runs=5):
         for train_path, test_path, size in get_dataset_pairs():
             print(f"\nTraining dataset size p{size}")
             _, accuracy, g_accuracy, _ = main(
-                train_path, test_path, f"p_{size}", hyperparams, random_seed=seed,
+                train_path,
+                test_path,
+                f"p_{size}",
+                hyperparams,
+                random_seed=seed,
             )
             results[f"p{size}"].append((accuracy, g_accuracy))
 
@@ -113,27 +132,36 @@ def run_all_variations(n_runs=5):
     std_greedy_accuracies = []
 
     for size, accuracies in results.items():
-        sizes.append(size.replace('p', ''))
-        accuracies = [(acc.cpu().numpy() if torch.is_tensor(acc) else acc,
-                   g_acc.cpu().numpy() if torch.is_tensor(g_acc) else g_acc) 
-                  for acc, g_acc in accuracies]
+        sizes.append(size.replace("p", ""))
+        accuracies = [
+            (
+                acc.cpu().numpy() if torch.is_tensor(acc) else acc,
+                g_acc.cpu().numpy() if torch.is_tensor(g_acc) else g_acc,
+            )
+            for acc, g_acc in accuracies
+        ]
         mean = np.mean(accuracies, axis=0)
         std = np.std(accuracies, axis=0)
-        
+
         # Store for plotting
         mean_tf_accuracies.append(mean[0])
         std_tf_accuracies.append(std[0])
         mean_greedy_accuracies.append(mean[1])
         std_greedy_accuracies.append(std[1])
-        
+
         print(f"{size:11} | Mean Accuracy: {mean[0]:.4f} ± {std[0]:.4f}")
         print(f"Individual runs: {', '.join(f'{acc[0]:.4f}' for acc in accuracies)}")
         print(f"Mean Greedy Accuracy: {mean[1]:.4f} ± {std[1]:.4f}")
         print(f"Individual runs: {', '.join(f'{acc[1]:.4f}' for acc in accuracies)}\n")
-    
+
     # Create and save the plot
-    plot_experiment_results(sizes, mean_tf_accuracies, std_tf_accuracies,
-                          mean_greedy_accuracies, std_greedy_accuracies)
+    plot_experiment_results(
+        sizes,
+        mean_tf_accuracies,
+        std_tf_accuracies,
+        mean_greedy_accuracies,
+        std_greedy_accuracies,
+    )
     print("\nExperiment plots saved to experiments/exp1_results.png")
 
 

@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def calculate_accuracy(pred, target, pad_idx, eos_idx, by_example=False, exclude_eos=False):
+def calculate_accuracy(
+    pred, target, pad_idx, eos_idx, by_example=False, exclude_eos=False
+):
     """
     Calculate token and sequence accuracy, excluding padding tokens.
 
@@ -31,23 +33,31 @@ def calculate_accuracy(pred, target, pad_idx, eos_idx, by_example=False, exclude
     if exclude_eos:
         token_mask = token_mask & (target != eos_idx)
     correct_tokens = (pred == target) & token_mask
-    
+
     if by_example:
         token_accs = []
         for i in range(len(pred)):
             mask_sum = token_mask[i].sum()
-            token_acc = correct_tokens[i].sum().float() / mask_sum.float() if mask_sum > 0 else torch.tensor(0.0, device=pred.device)
+            token_acc = (
+                correct_tokens[i].sum().float() / mask_sum.float()
+                if mask_sum > 0
+                else torch.tensor(0.0, device=pred.device)
+            )
             token_accs.append(token_acc)
         token_accs = torch.stack(token_accs)
     else:
-        token_accs = correct_tokens.sum().float() / token_mask.sum().float() if token_mask.sum() > 0 else torch.tensor(0.0, device=pred.device)
+        token_accs = (
+            correct_tokens.sum().float() / token_mask.sum().float()
+            if token_mask.sum() > 0
+            else torch.tensor(0.0, device=pred.device)
+        )
 
     # Sequence accuracy (up to first EOS, considering padding)
     seq_mask = torch.cumsum(target == eos_idx, dim=1) == 0
     seq_mask = seq_mask & token_mask
     correct_sequences = (pred == target) | ~seq_mask
     seq_accs = torch.all(correct_sequences, dim=1).float()
-    
+
     if not by_example:
         seq_accs = seq_accs.mean()
 
@@ -187,7 +197,7 @@ def oracle_greedy_search(
         masked_logits[mask, tgt_eos_idx] = float("-inf")
 
         # Force EOS if we've reached the target length
-        force_eos_mask = (current_len == min_len)
+        force_eos_mask = current_len == min_len
         masked_logits[force_eos_mask, :] = float("-inf")
         masked_logits[force_eos_mask, tgt_eos_idx] = float("inf")
 
@@ -223,10 +233,10 @@ def _get_min_lengths(tgt_output: torch.Tensor, eos_idx: int) -> torch.Tensor:
     """
     # Find first occurrence of EOS token for each sequence in batch
     eos_positions = (tgt_output == eos_idx).float().argmax(dim=1)
-    
+
     # Handle cases where no EOS token is found (set to sequence length)
     no_eos_mask = eos_positions == 0
     seq_lengths = torch.full_like(eos_positions, tgt_output.size(1))
     min_lens = torch.where(no_eos_mask, seq_lengths, eos_positions + 1)
-    
+
     return min_lens.to(tgt_output.device)
