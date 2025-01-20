@@ -4,7 +4,8 @@ import torch
 from trl import SFTTrainer
 from transformers import TrainingArguments, DataCollatorForSeq2Seq
 from unsloth import is_bfloat16_supported
-from rich import print, install
+from rich import print
+from rich.traceback import install
 
 install()
 
