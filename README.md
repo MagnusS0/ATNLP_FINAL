@@ -71,7 +71,7 @@ llama/                   # Llama-specific scripts
 
 
 ## Data Input
-The SCAN dataset is sourced from the [Transformer-SCAN repository](https://github.com/jlrussin/transformer_scan). Each dataset split consists of text files with lines in the format:
+The SCAN dataset is sourced from the [SCAN repository](https://github.com/brendenlake/SCAN). Each dataset split consists of text files with lines in the format:
 ```
 IN: <COMMAND> OUT: <ACTION>
 ```
@@ -196,4 +196,4 @@ We aim to reproduce and compare the following key findings:
 
 
 ## Acknowledgments
-This project is inspired by the experiments conducted in [Lake & Baroni, 2017](https://arxiv.org/abs/1711.00350). We thank [Transformer-SCAN](https://github.com/jlrussin/transformer_scan) for providing preprocessed SCAN datasets and code references. The Transformer model architecture is adapted from the foundational paper [*Attention Is All You Need*](https://arxiv.org/abs/1706.03762) by Vaswani et al.
+This project is inspired by the experiments conducted in [Lake & Baroni, 2017](https://arxiv.org/abs/1711.00350). The Transformer model architecture is adapted from the foundational paper [*Attention Is All You Need*](https://arxiv.org/abs/1706.03762) by Vaswani et al.
